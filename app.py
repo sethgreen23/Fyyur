@@ -345,7 +345,7 @@ def show_artist(artist_id):
   # TODO: replace with real artist data from the artist table, using artist_id
   data = []
 
-  
+
   """  
   data1={
     "id": 4,
@@ -533,6 +533,24 @@ def create_artist_submission():
 def shows():
   # displays list of shows at /shows
   # TODO: replace with real venues data.
+  #getting all the shows
+  shows = db.session.query(Venue, Artist,Show.start_time).filter(Show.artist_id==Artist.id, Show.venue_id==Venue.id).all()
+  data = []
+  
+  for venue, artist, start_time in shows:
+    print(venue.name,artist.name)
+    print("\n")
+    data.append({
+      "venue_id":venue.id,
+      "venue_name":venue.name,
+      "artist_id": artist.id,
+      "artist_name": artist.name,
+      "artist_image_link": artist.image_link,
+      "start_time": str(start_time)
+    })
+  """"""
+
+  """
   data=[{
     "venue_id": 1,
     "venue_name": "The Musical Hop",
@@ -569,6 +587,7 @@ def shows():
     "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
     "start_time": "2035-04-15T20:00:00.000Z"
   }]
+  """
   return render_template('pages/shows.html', shows=data)
 
 @app.route('/shows/create')
