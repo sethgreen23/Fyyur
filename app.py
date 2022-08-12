@@ -15,6 +15,7 @@ import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
+from sqlalchemy import func
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -108,7 +109,32 @@ def index():
 @app.route('/venues')
 def venues():
   # TODO: replace with real venues data.
+  data = []
+  #get non dublicated area
+  every_areas = Venue.query.with_entities(func.count(Venue.id), Venue.city, Venue.state).group_by(Venue.city, Venue.state).all()
+
+  for area in every_areas:
+    venues_data = []
+
+    #get list of venues for each distinct area
+    area_venues = Venue.query.filter_by(state=area.state, city=area.city).all()
+    for venue in area_venues:
+      venues_data.append({
+        "id": venue.id,
+        "name": venue.name,
+        #get the number of upcaming show for this venue
+        "num_upcomming_shows":len(db.session.query(Show).filter(Show.venue_id==venue.id, Show.start_time>datetime.now()).all())
+      })
+    #populate the venues list for the current specic area
+    data.append({
+      "city": area.city,
+      "state": area.state,
+      "venues": venues_data
+    })
   #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
+  
+  
+  """  
   data=[{
     "city": "San Francisco",
     "state": "CA",
@@ -130,6 +156,7 @@ def venues():
       "num_upcoming_shows": 0,
     }]
   }]
+  """
   return render_template('pages/venues.html', areas=data);
 
 @app.route('/venues/search', methods=['POST'])
@@ -555,10 +582,27 @@ def create_shows():
 def create_show_submission():
   # called to create new shows in the db, upon submitting new show listing form
   # TODO: insert form data as a new Show record in the db, instead
+  error = False
+  try:
+    artist_id = request.form['artist_id']
+    venue_id = request.form['venue_id']
+    start_time = request.form['start_time']
 
+    show = Show(artist_id=artist_id, venue_id = venue_id, start_time=start_time)
+    db.session.add(show)
+    db.session.commit()
+  except:
+    error = True
+    db.session.rollback()
+    print(sys.exc_info())
+  finally:
+    db.session.close()
   # on successful db insert, flash success
-  flash('Show was successfully listed!')
+  if not error:
+    flash('Show was successfully listed!')
   # TODO: on unsuccessful db insert, flash an error instead.
+  if error: 
+    flash('An error occurred. Show could not be listed')
   # e.g., flash('An error occurred. Show could not be listed.')
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return render_template('pages/home.html')
