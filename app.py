@@ -132,7 +132,7 @@ def venues():
       "state": area.state,
       "venues": venues_data
     })
-  #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
+  #num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
   
   return render_template('pages/venues.html', areas=data);
 
@@ -141,13 +141,21 @@ def search_venues():
   # TODO: implement search on venues with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
+  sterm = request.form.get('search_term','')
+  venues = db.session.query(Venue).filter(Venue.name.ilike('%'+sterm+'%')).all()
+  print(venues)
+  data = []
+  count = len(venues)
+  for venue in venues:
+    num_upcoming_shows=len(db.session.query(Show).filter(Show.venue_id==venue.id, Show.start_time>datetime.now()).all())
+    data.append({
+      "id": venue.id,
+      "name":venue.name,
+      "num_upcoming_shows":num_upcoming_shows
+    })
   response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
+    "count": count,
+    "data": data
   }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
@@ -156,7 +164,7 @@ def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
   data = []
-  #get the artist with artist_id id
+  #get the venue with venue_id id
   venue = db.session.query(Venue).get(venue_id);
   #get past show info
   past_show = db.session.query(Artist, Show, Venue).filter(Artist.id==Show.artist_id, Venue.id==Show.venue_id, Show.venue_id==venue_id,Show.start_time<datetime.now()).all();
