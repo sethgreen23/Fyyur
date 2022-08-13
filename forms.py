@@ -23,14 +23,18 @@ class ShowForm(Form):
     )
 
 class VenueForm(Form):
+    def validate_phone(form, field):
+        if not re.search(r"^[0-9]{3}-[0-9]{3}-[0-9]{4}$",field.data):
+            raise ValidationError("Phone number should have this form xxx-xxx-xxxx")
+
     name = StringField(
-        'name', validators=[DataRequired()]
+        'name', validators=[DataRequired(),Length(max=500)]
     )
     city = StringField(
-        'city', validators=[DataRequired()]
+        'city', validators=[DataRequired(),Length(max=500)]
     )
     state = SelectField(
-        'state', validators=[DataRequired()],
+        'state', validators=[DataRequired(),Length(max=500)],
         choices=[
             ('AL', 'AL'),
             ('AK', 'AK'),
@@ -86,13 +90,13 @@ class VenueForm(Form):
         ]
     )
     address = StringField(
-        'address', validators=[DataRequired()]
+        'address', validators=[DataRequired(), Length(max=120)]
     )
     phone = StringField(
-        'phone',validators=[DataRequired(),]
+        'phone',validators=[DataRequired()]
     )
     image_link = StringField(
-        'image_link'
+        'image_link',validators=[Length(max=600)]
     )
     genres = SelectMultipleField(
         # TODO implement enum restriction
@@ -120,7 +124,7 @@ class VenueForm(Form):
         ]
     )
     facebook_link = StringField(
-        'facebook_link', validators=[URL()]
+        'facebook_link', validators=[URL(), Length(max=120)]
     )
     website_link = StringField(
         'website_link'
