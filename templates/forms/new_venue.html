@@ -1,6 +1,12 @@
 {% extends 'layouts/main.html' %} {% block title %}New Venue{% endblock %} {%
 block content %}
 <div class="form-wrapper">
+  {% for field, errors in form.errors.items() %}
+  <div class="alert alert-block alert-danger fade in">
+    <a class="close" data-dismiss="alert">&times;</a>
+    {{ ', '.join(errors) }}
+  </div>
+  {% endfor %}
   <form method="post" class="form" action="/venues/create">
     <h3 class="form-heading">
       List a new venue

@@ -14,11 +14,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import logging
 from logging import Formatter, FileHandler
-from flask_wtf import Form
 from forms import *
 from sqlalchemy import func
 from models import *
-
+from flask_wtf import Form
+from wtforms import StringField, PasswordField, BooleanField, SubmitField ,Form, validators
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
@@ -430,42 +431,45 @@ def create_artist_submission():
   # called upon submitting the new artist listing form
   # TODO: insert form data as a new Venue record in the db, instead
   error = False
-  try:
-    name = request.form['name']
-    city = request.form['city']
-    state = request.form['state']
-    phone = request.form['phone']
-    genres = request.form.getlist('genres')
-    facebook_link = request.form['facebook_link']
-    image_link = request.form['image_link']
-    website = request.form['website_link']
-    seeking_venue = True if 'seeking_venue' in request.form else False
-    seeking_description = request.form['seeking_description']
+  form = ArtistForm(request.form)
+  if form.validate():
+    try:
+      name = request.form['name']
+      city = request.form['city']
+      state = request.form['state']
+      phone = request.form['phone']
+      genres = request.form.getlist('genres')
+      facebook_link = request.form['facebook_link']
+      image_link = request.form['image_link']
+      website = request.form['website_link']
+      seeking_venue = True if 'seeking_venue' in request.form else False
+      seeking_description = request.form['seeking_description']
 
-    artist = Artist(name=name, city=city, state=state, phone=phone, genres=genres, facebook_link=facebook_link, image_link=image_link, website=website, seeking_venue=seeking_venue, seeking_description=seeking_description )
-    db.session.add(artist)
-    db.session.commit()
-  except:
-    error = False
-    db.session.rollback()
-    print(sys.exc_info())
-  finally:
-    db.session.close()
+      artist = Artist(name=name, city=city, state=state, phone=phone, genres=genres, facebook_link=facebook_link, image_link=image_link, website=website, seeking_venue=seeking_venue, seeking_description=seeking_description )
+      db.session.add(artist)
+      db.session.commit()
+    except:
+      error = False
+      db.session.rollback()
+      print(sys.exc_info())
+    finally:
+      db.session.close()
   
   
   
-  # TODO: modify data to be the data object returned from db insertion
+    # TODO: modify data to be the data object returned from db insertion
 
-  # on successful db insert, flash success
-  if not error:
-    flash('Artist ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  if error:
-    flash('An error occurred. Artist '+ request.form['name']+ ' could not be listed. ')
-  
-  # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
-  return render_template('pages/home.html')
-
+    # on successful db insert, flash success
+    if not error:
+      flash('Artist ' + request.form['name'] + ' was successfully listed!')
+    # TODO: on unsuccessful db insert, flash an error instead.
+    if error:
+      flash('An error occurred. Artist '+ request.form['name']+ ' could not be listed. ')
+    
+    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
+    return render_template('pages/home.html')
+  else:
+    return render_template('forms/new_artist.html', form=form)
 
 #  Shows
 #  ----------------------------------------------------------------
